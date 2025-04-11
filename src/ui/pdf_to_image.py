@@ -7,7 +7,7 @@ from PyQt5.QtGui import QImage, QPixmap
 import fitz
 import os
 
-class PDFToJPEGWidget(QWidget):
+class PDFToImageWidget(QWidget):
     def __init__(self):
         super().__init__()
         self.current_pdf_path = None
@@ -61,20 +61,34 @@ class PDFToJPEGWidget(QWidget):
         quality_layout = QGridLayout()
         self.quality_spin = QSpinBox()
         self.quality_spin.setRange(1, 100)
-        self.quality_spin.setValue(90)
+        self.quality_spin.setValue(100)
         quality_layout.addWidget(QLabel("이미지 품질:"), 0, 0)
         quality_layout.addWidget(self.quality_spin, 0, 1)
         
-        # 변환 버튼
-        self.convert_btn = QPushButton("JPEG로 변환")
-        self.convert_btn.clicked.connect(self.convert_to_jpeg)
+        # 이미지 품질 설정
+        quality_layout = QGridLayout()
+        self.dpi_spin = QSpinBox()
+        self.dpi_spin.setRange(72, 1200)  # DPI 범위 설정 (72-1200)
+        self.dpi_spin.setValue(300)  # 기본값 300 DPI
+        self.dpi_spin.setSingleStep(72)  # 72 단위로 증가
+        quality_layout.addWidget(QLabel("DPI:"), 0, 0)
+        quality_layout.addWidget(self.dpi_spin, 0, 1)
+        
+        # 변환 버튼들
+        button_layout = QHBoxLayout()
+        self.convert_jpg_btn = QPushButton("JPEG로 변환")
+        self.convert_jpg_btn.clicked.connect(lambda: self.convert_to_image("jpg"))
+        self.convert_png_btn = QPushButton("PNG로 변환")
+        self.convert_png_btn.clicked.connect(lambda: self.convert_to_image("png"))
+        button_layout.addWidget(self.convert_jpg_btn)
+        button_layout.addWidget(self.convert_png_btn)
         
         # 레이아웃에 위젯 추가
         layout.addWidget(self.label_info)
         layout.addLayout(file_layout)
         layout.addLayout(range_layout)
         layout.addLayout(quality_layout)
-        layout.addWidget(self.convert_btn)
+        layout.addLayout(button_layout)
         layout.addStretch()
         
         return layout
@@ -162,7 +176,7 @@ class PDFToJPEGWidget(QWidget):
             self.preview_layout.addWidget(label)
             self.preview_layout.addWidget(QLabel(""))  # 간격용
 
-    def convert_to_jpeg(self):
+    def convert_to_image(self, format_type):
         if not self.current_pdf_path:
             QMessageBox.warning(self, "경고", "PDF 파일을 먼저 선택해주세요.")
             return
@@ -193,15 +207,18 @@ class PDFToJPEGWidget(QWidget):
         if save_dir:
             try:
                 quality = self.quality_spin.value()
+                dpi = self.dpi_spin.value()
+                matrix_value = dpi / 72.0  # DPI를 Matrix 값으로 변환
+                
                 for page_num in range(start-1, end):
                     page = self.current_doc[page_num]
-                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 고해상도
+                    pix = page.get_pixmap(matrix=fitz.Matrix(matrix_value, matrix_value))
                     
                     # 이미지 저장
-                    save_path = os.path.join(save_dir, f"page_{page_num+1}.jpg")
+                    save_path = os.path.join(save_dir, f"page_{page_num+1}.{format_type}")
                     pix.save(save_path)
                     
-                QMessageBox.information(self, "성공", "JPEG 변환이 완료되었습니다.")
+                QMessageBox.information(self, "성공", f"{format_type.upper()} 변환이 완료되었습니다.")
             except Exception as e:
                 QMessageBox.critical(self, "오류", f"변환 중 오류가 발생했습니다: {str(e)}")
 
