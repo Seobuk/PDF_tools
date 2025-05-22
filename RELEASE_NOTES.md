@@ -33,6 +33,9 @@ pip install -r requirements.txt
 ### 다운로드
 - [GitHub 릴리즈 페이지](https://github.com/Seobuk/PDF_tools/releases/tag/v1.1.0)에서 다운로드 가능
 
+### 최신 버전 다운로드
+- [GitHub 릴리즈 페이지](https://github.com/Seobuk/PDF_tools/releases/tag/v1.2.0)에서 다운로드 가능
+
 ### 알려진 이슈
 - 일부 특수 문자를 포함한 PDF 문서에서 수식 추출 시 오류가 발생할 수 있습니다.
 - 매우 큰 PDF 파일(100MB 이상) 처리 시 성능 저하가 발생할 수 있습니다.
@@ -44,4 +47,12 @@ pip install -r requirements.txt
 
 ### 문의 및 지원
 - GitHub Issues: https://github.com/Seobuk/PDF_tools/issues
-- 이메일: [이메일 주소] 
+- 이메일: [이메일 주소]
+
+## v1.2.0 (2024-05-22)
+
+### 변경 사항
+- 어두운 테마가 기본 적용되어 UI가 더욱 세련되게 개선되었습니다.
+- 실행 파일(exe) 생성 방법을 README에 추가했습니다.
+- 종속성 목록에 `pyinstaller`가 추가되었습니다.
+

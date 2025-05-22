@@ -2,3 +2,4 @@ PyQt5>=5.15.11
 PyMuPDF>=1.25.5
 Pillow>=8.0.0
 PyPDF2>=3.0.0
+pyinstaller>=5.13.0
