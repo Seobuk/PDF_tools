@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QPushButton, QFileDialog, QMessageBox, QListWidget,
-    QTextEdit, QComboBox, QSpinBox, QCheckBox, QApplication, QScrollArea
+    QTextEdit, QComboBox, QSpinBox, QCheckBox, QApplication
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QClipboard

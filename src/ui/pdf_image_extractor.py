@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-    QFileDialog, QMessageBox, QSpinBox, QScrollArea, QGridLayout,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QFileDialog, QMessageBox, QSpinBox, QGridLayout,
     QListWidget, QListWidgetItem, QCheckBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
+from .zoomable_scroll_area import ZoomableScrollArea
 import fitz
 import os
 from PIL import Image
@@ -57,7 +58,17 @@ class PDFImageExtractorWidget(QWidget):
         self.image_list.setSelectionMode(QListWidget.MultiSelection)
         self.image_list.itemClicked.connect(self.show_image)
         self.image_list.currentItemChanged.connect(self.show_image)
-        
+
+        # 미리보기 배율
+        zoom_layout = QGridLayout()
+        self.zoom_spin = QSpinBox()
+        self.zoom_spin.setRange(10, 300)
+        self.zoom_spin.setValue(100)
+        self.zoom_spin.setSuffix('%')
+        self.zoom_spin.valueChanged.connect(lambda: self.show_image(self.image_list.currentItem()))
+        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(self.zoom_spin, 0, 1)
+
         # 저장 버튼
         self.save_btn = QPushButton("선택한 이미지 저장")
         self.save_btn.clicked.connect(self.save_images)
@@ -68,6 +79,7 @@ class PDFImageExtractorWidget(QWidget):
         layout.addWidget(QLabel("추출된 이미지 목록:"))
         layout.addWidget(self.select_all_checkbox)
         layout.addWidget(self.image_list)
+        layout.addLayout(zoom_layout)
         layout.addWidget(self.save_btn)
         layout.addStretch()
         
@@ -81,7 +93,7 @@ class PDFImageExtractorWidget(QWidget):
         preview_label.setAlignment(Qt.AlignCenter)
         
         # 미리보기 스크롤 영역
-        self.scroll_area = QScrollArea()
+        self.scroll_area = ZoomableScrollArea(self.zoom_spin)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setMinimumWidth(400)
         
@@ -177,8 +189,10 @@ class PDFImageExtractorWidget(QWidget):
         qim = QImage(img_data, image.size[0], image.size[1], QImage.Format_RGBA8888)
         pixmap = QPixmap.fromImage(qim)
         
-        # 이미지 크기 조정 (필요한 경우)
-        scaled_pixmap = pixmap.scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        # 이미지 크기 조정 (배율 적용)
+        zoom = self.zoom_spin.value() / 100
+        scaled_pixmap = pixmap.scaled(int(pixmap.width() * zoom), int(pixmap.height() * zoom),
+                                      Qt.KeepAspectRatio, Qt.SmoothTransformation)
         
         # 라벨에 이미지 표시
         label = QLabel()
