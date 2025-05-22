@@ -54,6 +54,16 @@ class PDFRotatorWidget(QWidget):
         self.page_spin.valueChanged.connect(self.update_preview)
         page_layout.addWidget(QLabel("페이지:"), 0, 0)
         page_layout.addWidget(self.page_spin, 0, 1)
+
+        # 미리보기 배율
+        zoom_layout = QGridLayout()
+        self.zoom_spin = QSpinBox()
+        self.zoom_spin.setRange(10, 300)
+        self.zoom_spin.setValue(30)
+        self.zoom_spin.setSuffix('%')
+        self.zoom_spin.valueChanged.connect(self.update_preview)
+        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(self.zoom_spin, 0, 1)
         
         # 회전 버튼들
         rotate_layout = QHBoxLayout()
@@ -72,6 +82,7 @@ class PDFRotatorWidget(QWidget):
         layout.addWidget(self.label_info)
         layout.addLayout(file_layout)
         layout.addLayout(page_layout)
+        layout.addLayout(zoom_layout)
         layout.addLayout(rotate_layout)
         layout.addWidget(self.save_btn)
         layout.addStretch()
@@ -158,7 +169,8 @@ class PDFRotatorWidget(QWidget):
             info_label.setAlignment(Qt.AlignCenter)
             
             # 페이지 렌더링
-            pix = page.get_pixmap(matrix=fitz.Matrix(0.3, 0.3))
+            zoom = self.zoom_spin.value() / 100
+            pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
             
             # PyQt 이미지로 변환
             img = QImage(pix.samples, pix.width, pix.height, pix.stride, QImage.Format_RGB888)
