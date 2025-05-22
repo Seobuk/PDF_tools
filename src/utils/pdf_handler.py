@@ -33,7 +33,7 @@ class PDFHandler:
                     merger.append(file_path)
                 elif ext in ['.jpg', '.jpeg', '.png']:
                     # 이미지를 PDF로 변환
-                    temp_pdf = self._convert_image_to_pdf(file_path)
+                    temp_pdf = self.image_to_pdf(file_path)
                     temp_files.append(temp_pdf)  # 임시 파일 목록에 추가
                     merger.append(temp_pdf)
             
@@ -56,29 +56,34 @@ class PDFHandler:
                 except:
                     pass
 
-    def _convert_image_to_pdf(self, image_path):
-        # 시스템 임시 디렉토리에 임시 파일 생성
-        temp_fd, temp_pdf = tempfile.mkstemp(suffix='.pdf')
-        os.close(temp_fd)  # 파일 디스크립터 즉시 닫기
-        
+    def image_to_pdf(self, image_path, output_path=None):
+        """이미지 파일을 PDF로 변환한다.
+
+        Parameters
+        ----------
+        image_path : str
+            변환할 이미지 경로
+        output_path : str, optional
+            저장할 PDF 경로. 지정하지 않으면 임시 파일을 생성한다.
+
+        Returns
+        -------
+        str
+            생성된 PDF 파일의 경로
+        """
+
+        if output_path is None:
+            temp_fd, output_path = tempfile.mkstemp(suffix='.pdf')
+            os.close(temp_fd)
+
         try:
             with Image.open(image_path) as image:
-                # RGBA 이미지를 RGB로 변환
                 if image.mode == 'RGBA':
                     image = image.convert('RGB')
-                image.save(temp_pdf, "PDF", resolution=100.0)
+                image.save(output_path, "PDF", resolution=100.0)
         except Exception as e:
-            if os.path.exists(temp_pdf):
-                os.remove(temp_pdf)
+            if os.path.exists(output_path):
+                os.remove(output_path)
             raise e
-            
-        return temp_pdf
 
-    @staticmethod
-    def image_to_pdf(img):
-        # 이미지를 PDF로 변환하는 로직
-        pass
-
-    def image_to_pdf(self, img_path):
-        from PIL import Image  # 필요할 때만 import
-        # ... 나머지 코드 
+        return output_path
