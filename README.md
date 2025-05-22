@@ -1,8 +1,9 @@
 # PDF Composer
 
-v1.1.0
+v1.2.0
 
 PDF 문서를 편집하고 변환할 수 있는 PyQt5 기반의 데스크톱 애플리케이션입니다.
+기본적으로 세련된 다크 테마를 적용하여 더욱 편안한 사용 경험을 제공합니다.
 
 ## 주요 기능
 
@@ -24,6 +25,11 @@ pip install -r requirements.txt
 2. 애플리케이션 실행:
 ```bash
 python main.py
+```
+
+3. 실행 파일(exe) 생성 (선택 사항):
+```bash
+pyinstaller --noconsole --onefile main.py
 ```
 
 ## 사용 방법
@@ -61,6 +67,7 @@ python main.py
 - PyQt5
 - PyPDF2
 - fitz (PyMuPDF)
+- pyinstaller
 
 ## 라이선스
 
