@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-    QFileDialog, QMessageBox, QSpinBox, QScrollArea, QGridLayout
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
+    QFileDialog, QMessageBox, QSpinBox, QGridLayout
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
+from .zoomable_scroll_area import ZoomableScrollArea
 import fitz
 import os
 
@@ -112,7 +113,7 @@ class PDFToImageWidget(QWidget):
         preview_label.setAlignment(Qt.AlignCenter)
         
         # 미리보기 스크롤 영역
-        self.scroll_area = QScrollArea()
+        self.scroll_area = ZoomableScrollArea(self.zoom_spin)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setMinimumWidth(400)
         
