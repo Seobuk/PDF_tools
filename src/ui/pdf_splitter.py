@@ -53,11 +53,21 @@ class PDFSplitterWidget(QWidget):
         self.end_page.setMinimum(1)
         self.start_page.valueChanged.connect(self.update_preview)
         self.end_page.valueChanged.connect(self.update_preview)
-        
+
         range_layout.addWidget(QLabel("시작 페이지:"), 0, 0)
         range_layout.addWidget(self.start_page, 0, 1)
         range_layout.addWidget(QLabel("끝 페이지:"), 1, 0)
         range_layout.addWidget(self.end_page, 1, 1)
+
+        # 미리보기 배율
+        zoom_layout = QGridLayout()
+        self.zoom_spin = QSpinBox()
+        self.zoom_spin.setRange(10, 300)
+        self.zoom_spin.setValue(30)
+        self.zoom_spin.setSuffix('%')
+        self.zoom_spin.valueChanged.connect(self.update_preview)
+        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(self.zoom_spin, 0, 1)
         
         # 쪼개기 버튼
         self.split_btn = QPushButton("PDF 쪼개기")
@@ -71,6 +81,7 @@ class PDFSplitterWidget(QWidget):
         layout.addWidget(self.label_info)
         layout.addLayout(file_layout)
         layout.addLayout(range_layout)
+        layout.addLayout(zoom_layout)
         layout.addWidget(self.split_btn)
         layout.addWidget(self.save_btn)
         layout.addStretch()
@@ -138,9 +149,10 @@ class PDFSplitterWidget(QWidget):
         end = self.end_page.value()
         
         # 선택된 페이지 미리보기 생성
+        zoom = self.zoom_spin.value() / 100
         for page_num in range(start, end):
             page = self.current_doc[page_num]
-            pix = page.get_pixmap(matrix=fitz.Matrix(0.3, 0.3))
+            pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
             
             # PyQt 이미지로 변환
             img = QImage(pix.samples, pix.width, pix.height, pix.stride, QImage.Format_RGB888)
