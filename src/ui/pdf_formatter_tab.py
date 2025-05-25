@@ -16,13 +16,13 @@ class DropArea(QLabel):
         self.setText('\n\n여기에 PDF 파일을 드래그하세요\n또는 클릭하여 파일을 선택하세요')
         self.setStyleSheet('''
             QLabel {
-                border: 2px dashed #aaa;
+                border: 2px dashed #d1d1d6;
                 border-radius: 5px;
-                background-color: #f0f0f0;
+                background-color: #f2f2f7;
                 padding: 20px;
             }
             QLabel:hover {
-                background-color: #e0e0e0;
+                background-color: #e5e5ea;
             }
         ''')
         self.setAcceptDrops(True)
@@ -32,9 +32,9 @@ class DropArea(QLabel):
             event.acceptProposedAction()
             self.setStyleSheet('''
                 QLabel {
-                    border: 2px dashed #4CAF50;
+                    border: 2px dashed #34c759;
                     border-radius: 5px;
-                    background-color: #E8F5E9;
+                    background-color: #e9f9eb;
                     padding: 20px;
                 }
             ''')
@@ -42,13 +42,13 @@ class DropArea(QLabel):
     def dragLeaveEvent(self, event):
         self.setStyleSheet('''
             QLabel {
-                border: 2px dashed #aaa;
+                border: 2px dashed #d1d1d6;
                 border-radius: 5px;
-                background-color: #f0f0f0;
+                background-color: #f2f2f7;
                 padding: 20px;
             }
             QLabel:hover {
-                background-color: #e0e0e0;
+                background-color: #e5e5ea;
             }
         ''')
 
@@ -57,13 +57,13 @@ class DropArea(QLabel):
         self.parent().handleDroppedFile(file_path)
         self.setStyleSheet('''
             QLabel {
-                border: 2px dashed #aaa;
+                border: 2px dashed #d1d1d6;
                 border-radius: 5px;
-                background-color: #f0f0f0;
+                background-color: #f2f2f7;
                 padding: 20px;
             }
             QLabel:hover {
-                background-color: #e0e0e0;
+                background-color: #e5e5ea;
             }
         ''')
 

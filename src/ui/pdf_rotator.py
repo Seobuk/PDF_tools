@@ -158,10 +158,10 @@ class PDFRotatorWidget(QWidget):
             if page_num in self.selected_pages:
                 page_container.setStyleSheet("""
                     QWidget {
-                        border: 2px solid #007bff;
+                        border: 2px solid #007aff;
                         border-radius: 5px;
                         padding: 5px;
-                        background-color: #f8f9fa;
+                        background-color: #f2f2f7;
                     }
                 """)
             
@@ -184,7 +184,7 @@ class PDFRotatorWidget(QWidget):
             
             # 선택 상태 표시
             if page_num in self.selected_pages:
-                info_label.setStyleSheet("background-color: #e3f2fd; color: #007bff;")
+                info_label.setStyleSheet("background-color: #e5f0ff; color: #007aff;")
             
             # 클릭 이벤트 처리
             label.mousePressEvent = lambda e, p=page_num: self.toggle_page_selection(p)

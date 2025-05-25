@@ -1,13 +1,15 @@
 :root {
-  --primary-color: #007bff;
-  --secondary-color: #6c757d;
-  --background-color: #ffffff;
-  --text-color: #333333;
+  /* Apple inspired light palette */
+  --primary-color: #007aff;
+  --secondary-color: #8e8e93;
+  --background-color: #f2f2f7;
+  --text-color: #000000;
 }
 
 [data-theme="dark"] {
-  --primary-color: #0056b3;
-  --secondary-color: #545b62;
-  --background-color: #1a1a1a;
+  /* Dark mode variant matching Apple style */
+  --primary-color: #0a84ff;
+  --secondary-color: #8e8e93;
+  --background-color: #1c1c1e;
   --text-color: #ffffff;
-} 
+}
