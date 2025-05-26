@@ -1,71 +1,15 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFileDialog, QProgressBar, QSpinBox, QGridLayout
+    QFileDialog, QMessageBox, QSpinBox, QGridLayout,
+    QProgressBar
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QDragEnterEvent, QDropEvent, QImage, QPixmap
-from PyPDF2 import PdfReader, PdfWriter
+from PyQt5.QtGui import QImage, QPixmap
 from .zoomable_scroll_area import ZoomableScrollArea
+from .styles import PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, PROGRESS_BAR_STYLE, TITLE_LABEL_STYLE
 import fitz
 import os
-
-class DropArea(QLabel):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setAlignment(Qt.AlignCenter)
-        self.setText('\n\n여기에 PDF 파일을 드래그하세요\n또는 클릭하여 파일을 선택하세요')
-        self.setStyleSheet('''
-            QLabel {
-                border: 2px dashed #d1d1d6;
-                border-radius: 5px;
-                background-color: #f2f2f7;
-                padding: 20px;
-            }
-            QLabel:hover {
-                background-color: #e5e5ea;
-            }
-        ''')
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self, event: QDragEnterEvent):
-        if event.mimeData().hasUrls() and event.mimeData().urls()[0].toLocalFile().endswith('.pdf'):
-            event.acceptProposedAction()
-            self.setStyleSheet('''
-                QLabel {
-                    border: 2px dashed #34c759;
-                    border-radius: 5px;
-                    background-color: #e9f9eb;
-                    padding: 20px;
-                }
-            ''')
-
-    def dragLeaveEvent(self, event):
-        self.setStyleSheet('''
-            QLabel {
-                border: 2px dashed #d1d1d6;
-                border-radius: 5px;
-                background-color: #f2f2f7;
-                padding: 20px;
-            }
-            QLabel:hover {
-                background-color: #e5e5ea;
-            }
-        ''')
-
-    def dropEvent(self, event: QDropEvent):
-        file_path = event.mimeData().urls()[0].toLocalFile()
-        self.parent().handleDroppedFile(file_path)
-        self.setStyleSheet('''
-            QLabel {
-                border: 2px dashed #d1d1d6;
-                border-radius: 5px;
-                background-color: #f2f2f7;
-                padding: 20px;
-            }
-            QLabel:hover {
-                background-color: #e5e5ea;
-            }
-        ''')
+from PyPDF2 import PdfReader, PdfWriter
 
 class PdfFormatterTab(QWidget):
     def __init__(self):
@@ -88,9 +32,10 @@ class PdfFormatterTab(QWidget):
     def setup_left_panel(self):
         layout = QVBoxLayout()
 
-        # 드래그 앤 드롭 영역
-        self.dropArea = DropArea(self)
-        self.dropArea.mousePressEvent = self.selectFile  # 클릭으로도 파일 선택 가능
+        # PDF 선택 버튼
+        self.select_button = QPushButton('PDF 파일 선택')
+        self.select_button.clicked.connect(self.selectFile)
+        self.select_button.setStyleSheet(PRIMARY_BUTTON_STYLE)
 
         # 선택된 파일 경로 표시
         self.fileLabel = QLabel('선택된 파일: 없음')
@@ -110,12 +55,14 @@ class PdfFormatterTab(QWidget):
         self.convertButton = QPushButton('A4 형식으로 변환')
         self.convertButton.clicked.connect(self.convertToA4)
         self.convertButton.setEnabled(False)
+        self.convertButton.setStyleSheet(SUCCESS_BUTTON_STYLE)
 
         # 진행 상태바
         self.progressBar = QProgressBar()
         self.progressBar.setVisible(False)
+        self.progressBar.setStyleSheet(PROGRESS_BAR_STYLE)
 
-        layout.addWidget(self.dropArea)
+        layout.addWidget(self.select_button)
         layout.addWidget(self.fileLabel)
         layout.addLayout(zoom_layout)
         layout.addWidget(self.convertButton)
@@ -129,6 +76,7 @@ class PdfFormatterTab(QWidget):
 
         preview_label = QLabel('미리보기')
         preview_label.setAlignment(Qt.AlignCenter)
+        preview_label.setStyleSheet(TITLE_LABEL_STYLE)
 
         self.scroll_area = ZoomableScrollArea(self.zoom_spin)
         self.scroll_area.setWidgetResizable(True)
@@ -158,11 +106,21 @@ class PdfFormatterTab(QWidget):
             self.converted_doc = None
             self.update_preview()
 
-    def selectFile(self, event=None):
-        fname, _ = QFileDialog.getOpenFileName(self, '파일 선택', '', 
+    def selectFile(self):
+        fname, _ = QFileDialog.getOpenFileName(self, 'PDF 파일 선택', '', 
                                              'PDF 파일 (*.pdf)')
         if fname:
-            self.handleDroppedFile(fname)
+            self.selected_file = fname
+            self.fileLabel.setText(f'선택된 파일: {os.path.basename(fname)}')
+            self.convertButton.setEnabled(True)
+
+            # 기존 문서가 있으면 닫기
+            if self.current_doc:
+                self.current_doc.close()
+
+            self.current_doc = fitz.open(fname)
+            self.converted_doc = None
+            self.update_preview()
 
     def convertToA4(self):
         if hasattr(self, 'selected_file'):

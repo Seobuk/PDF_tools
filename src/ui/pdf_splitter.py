@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from ..utils.pdf_handler import PDFHandler
 from .zoomable_scroll_area import ZoomableScrollArea
+from .styles import PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, TITLE_LABEL_STYLE
 import fitz
 import os
 
@@ -34,19 +35,18 @@ class PDFSplitterWidget(QWidget):
         layout = QVBoxLayout()
         
         # 설명 라벨
-        self.label_info = QLabel("PDF 파일을 선택하고 쪼갤 페이지 범위를 지정하세요.")
-        self.label_info.setWordWrap(True)
+        self.label_info = QLabel("PDF 파일을 선택하고 분할할 페이지 범위를 지정하세요.")
+        self.label_info.setStyleSheet(TITLE_LABEL_STYLE)
         
-        # 파일 선택 영역
-        file_layout = QHBoxLayout()
+        # 파일 선택 버튼
+        self.select_btn = QPushButton("PDF 파일 선택")
+        self.select_btn.clicked.connect(self.select_pdf)
+        self.select_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
+        
+        # 선택된 파일 경로 표시
         self.file_path_label = QLabel("선택된 파일: 없음")
-        self.file_path_label.setWordWrap(True)
-        self.select_file_btn = QPushButton("PDF 선택")
-        self.select_file_btn.clicked.connect(self.select_pdf)
-        file_layout.addWidget(self.file_path_label)
-        file_layout.addWidget(self.select_file_btn)
         
-        # 페이지 범위 지정
+        # 페이지 범위 설정
         range_layout = QGridLayout()
         self.start_page = QSpinBox()
         self.end_page = QSpinBox()
@@ -54,12 +54,11 @@ class PDFSplitterWidget(QWidget):
         self.end_page.setMinimum(1)
         self.start_page.valueChanged.connect(self.update_preview)
         self.end_page.valueChanged.connect(self.update_preview)
-
         range_layout.addWidget(QLabel("시작 페이지:"), 0, 0)
         range_layout.addWidget(self.start_page, 0, 1)
         range_layout.addWidget(QLabel("끝 페이지:"), 1, 0)
         range_layout.addWidget(self.end_page, 1, 1)
-
+        
         # 미리보기 배율
         zoom_layout = QGridLayout()
         self.zoom_spin = QSpinBox()
@@ -67,20 +66,24 @@ class PDFSplitterWidget(QWidget):
         self.zoom_spin.setValue(30)
         self.zoom_spin.setSuffix('%')
         self.zoom_spin.valueChanged.connect(self.update_preview)
-        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(QLabel('미리보기 배율:'), 0, 0)
         zoom_layout.addWidget(self.zoom_spin, 0, 1)
         
-        # 쪼개기 버튼
-        self.split_btn = QPushButton("PDF 쪼개기")
+        # 분할 버튼
+        self.split_btn = QPushButton("선택한 범위 분할")
         self.split_btn.clicked.connect(self.split_pdf)
+        self.split_btn.setEnabled(False)
+        self.split_btn.setStyleSheet(SUCCESS_BUTTON_STYLE)
         
         # 저장 버튼
-        self.save_btn = QPushButton("선택한 페이지 저장")
-        self.save_btn.clicked.connect(self.save_pages)
+        self.save_btn = QPushButton("변경사항 저장")
+        self.save_btn.clicked.connect(self.save_changes)
+        self.save_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
         
         # 레이아웃에 위젯 추가
         layout.addWidget(self.label_info)
-        layout.addLayout(file_layout)
+        layout.addWidget(self.select_btn)
+        layout.addWidget(self.file_path_label)
         layout.addLayout(range_layout)
         layout.addLayout(zoom_layout)
         layout.addWidget(self.split_btn)
@@ -95,6 +98,7 @@ class PDFSplitterWidget(QWidget):
         # 미리보기 라벨
         preview_label = QLabel("미리보기")
         preview_label.setAlignment(Qt.AlignCenter)
+        preview_label.setStyleSheet(TITLE_LABEL_STYLE)
         
         # 미리보기 스크롤 영역
         self.scroll_area = ZoomableScrollArea(self.zoom_spin)
@@ -220,7 +224,7 @@ class PDFSplitterWidget(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "오류", f"PDF 분할 중 오류가 발생했습니다: {str(e)}")
 
-    def save_pages(self):
+    def save_changes(self):
         if not self.current_doc:
             QMessageBox.warning(self, "경고", "PDF 파일을 선택해주세요.")
             return

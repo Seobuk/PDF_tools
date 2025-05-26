@@ -48,6 +48,8 @@ class PDFImageExtractorWidget(QWidget):
         self.select_file_btn.clicked.connect(self.select_pdf)
         file_layout.addWidget(self.file_path_label)
         file_layout.addWidget(self.select_file_btn)
+
+        
         
         # 전체 선택 체크박스
         self.select_all_checkbox = QCheckBox("모든 이미지 선택")

@@ -1,10 +1,12 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFileDialog, QMessageBox, QSpinBox, QGridLayout
+    QFileDialog, QMessageBox, QSpinBox, QGridLayout,
+    QComboBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from .zoomable_scroll_area import ZoomableScrollArea
+from .styles import PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, TITLE_LABEL_STYLE
 import fitz
 import os
 
@@ -32,32 +34,35 @@ class PDFToImageWidget(QWidget):
         layout = QVBoxLayout()
         
         # 설명 라벨
-        self.label_info = QLabel("PDF 파일을 선택하고 변환할 페이지 범위를 지정하세요.")
-        self.label_info.setWordWrap(True)
+        self.label_info = QLabel("PDF 파일을 선택하고 이미지로 변환할 페이지 범위를 지정하세요.")
+        self.label_info.setStyleSheet(TITLE_LABEL_STYLE)
         
-        # 파일 선택 영역
-        file_layout = QHBoxLayout()
+        # 파일 선택 버튼
+        self.select_btn = QPushButton("PDF 파일 선택")
+        self.select_btn.clicked.connect(self.select_pdf)
+        self.select_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
+        
+        # 선택된 파일 경로 표시
         self.file_path_label = QLabel("선택된 파일: 없음")
-        self.file_path_label.setWordWrap(True)
-        self.select_file_btn = QPushButton("PDF 선택")
-        self.select_file_btn.clicked.connect(self.select_pdf)
-        file_layout.addWidget(self.file_path_label)
-        file_layout.addWidget(self.select_file_btn)
         
-        # 페이지 범위 지정
+        # 페이지 범위 설정
         range_layout = QGridLayout()
         self.start_page = QSpinBox()
         self.end_page = QSpinBox()
         self.start_page.setMinimum(1)
         self.end_page.setMinimum(1)
-        self.start_page.valueChanged.connect(self.update_preview)
-        self.end_page.valueChanged.connect(self.update_preview)
-
         range_layout.addWidget(QLabel("시작 페이지:"), 0, 0)
         range_layout.addWidget(self.start_page, 0, 1)
         range_layout.addWidget(QLabel("끝 페이지:"), 1, 0)
         range_layout.addWidget(self.end_page, 1, 1)
-
+        
+        # 이미지 형식 선택
+        format_layout = QHBoxLayout()
+        format_layout.addWidget(QLabel("이미지 형식:"))
+        self.format_combo = QComboBox()
+        self.format_combo.addItems(["PNG", "JPEG"])
+        format_layout.addWidget(self.format_combo)
+        
         # 미리보기 배율
         zoom_layout = QGridLayout()
         self.zoom_spin = QSpinBox()
@@ -65,42 +70,29 @@ class PDFToImageWidget(QWidget):
         self.zoom_spin.setValue(30)
         self.zoom_spin.setSuffix('%')
         self.zoom_spin.valueChanged.connect(self.update_preview)
-        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(QLabel('미리보기 배율:'), 0, 0)
         zoom_layout.addWidget(self.zoom_spin, 0, 1)
         
-        # 이미지 품질 설정
-        quality_layout = QGridLayout()
-        self.quality_spin = QSpinBox()
-        self.quality_spin.setRange(1, 100)
-        self.quality_spin.setValue(100)
-        quality_layout.addWidget(QLabel("이미지 품질:"), 0, 0)
-        quality_layout.addWidget(self.quality_spin, 0, 1)
-        
-        # 이미지 품질 설정
-        quality_layout = QGridLayout()
-        self.dpi_spin = QSpinBox()
-        self.dpi_spin.setRange(72, 1200)  # DPI 범위 설정 (72-1200)
-        self.dpi_spin.setValue(300)  # 기본값 300 DPI
-        self.dpi_spin.setSingleStep(72)  # 72 단위로 증가
-        quality_layout.addWidget(QLabel("DPI:"), 0, 0)
-        quality_layout.addWidget(self.dpi_spin, 0, 1)
-        
-        # 변환 버튼들
-        button_layout = QHBoxLayout()
-        self.convert_jpg_btn = QPushButton("JPEG로 변환")
-        self.convert_jpg_btn.clicked.connect(lambda: self.convert_to_image("jpg"))
-        self.convert_png_btn = QPushButton("PNG로 변환")
-        self.convert_png_btn.clicked.connect(lambda: self.convert_to_image("png"))
-        button_layout.addWidget(self.convert_jpg_btn)
-        button_layout.addWidget(self.convert_png_btn)
+        # 변환 버튼
+        self.convert_btn = QPushButton("이미지로 변환")
+        self.convert_btn.clicked.connect(self.convert_to_images)
+        self.convert_btn.setEnabled(False)
+        self.convert_btn.setStyleSheet(SUCCESS_BUTTON_STYLE)
         
         # 레이아웃에 위젯 추가
         layout.addWidget(self.label_info)
-        layout.addLayout(file_layout)
+        layout.addSpacing(8)
+        layout.addWidget(self.select_btn)
+        layout.addSpacing(4)
+        layout.addWidget(self.file_path_label)
+        layout.addSpacing(8)
         layout.addLayout(range_layout)
+        layout.addSpacing(4)
+        layout.addLayout(format_layout)
+        layout.addSpacing(4)
         layout.addLayout(zoom_layout)
-        layout.addLayout(quality_layout)
-        layout.addLayout(button_layout)
+        layout.addSpacing(12)
+        layout.addWidget(self.convert_btn)
         layout.addStretch()
         
         return layout
@@ -111,6 +103,7 @@ class PDFToImageWidget(QWidget):
         # 미리보기 라벨
         preview_label = QLabel("미리보기")
         preview_label.setAlignment(Qt.AlignCenter)
+        preview_label.setStyleSheet(TITLE_LABEL_STYLE)
         
         # 미리보기 스크롤 영역
         self.scroll_area = ZoomableScrollArea(self.zoom_spin)
@@ -148,6 +141,9 @@ class PDFToImageWidget(QWidget):
             self.end_page.setMaximum(page_count)
             self.start_page.setMaximum(page_count)
             self.end_page.setValue(page_count)
+            
+            # 변환 버튼 활성화
+            self.convert_btn.setEnabled(True)
             
             # 미리보기 업데이트
             self.update_preview()
@@ -189,51 +185,51 @@ class PDFToImageWidget(QWidget):
             self.preview_layout.addWidget(label)
             self.preview_layout.addWidget(QLabel(""))  # 간격용
 
-    def convert_to_image(self, format_type):
+    def convert_to_images(self):
         if not self.current_pdf_path:
-            QMessageBox.warning(self, "경고", "PDF 파일을 먼저 선택해주세요.")
+            QMessageBox.warning(self, "경고", "PDF 파일을 선택해주세요.")
             return
             
-        start = self.start_page.value()
-        end = self.end_page.value()
-        
-        if start > end:
-            QMessageBox.warning(self, "경고", "시작 페이지가 끝 페이지보다 클 수 없습니다.")
-            return
+        try:
+            # 저장할 디렉토리 선택
+            save_dir = QFileDialog.getExistingDirectory(
+                self,
+                "이미지 저장할 폴더 선택",
+                os.path.dirname(self.current_pdf_path)
+            )
             
-        # 원본 파일의 경로와 파일명 분리
-        original_dir = os.path.dirname(self.current_pdf_path)
-        original_filename = os.path.basename(self.current_pdf_path)
-        
-        # 새 폴더명 생성 (원본파일명_images)
-        default_dir_name = os.path.splitext(original_filename)[0] + '_images'
-        # 전체 경로 생성 (원본경로/원본파일명_images)
-        default_save_dir = os.path.join(original_dir, default_dir_name)
-        
-        # 저장할 폴더 선택
-        save_dir = QFileDialog.getExistingDirectory(
-            self, 
-            "저장할 폴더 선택",
-            default_save_dir  # 원본 파일 경로를 기본 저장 경로로 설정
-        )
-        
-        if save_dir:
-            try:
-                quality = self.quality_spin.value()
-                dpi = self.dpi_spin.value()
+            if save_dir:
+                format_type = self.format_combo.currentText().lower()
+                quality = 100  # JPEG 품질
+                dpi = 300  # 기본 DPI
                 matrix_value = dpi / 72.0  # DPI를 Matrix 값으로 변환
                 
-                for page_num in range(start-1, end):
+                start_page = self.start_page.value()
+                end_page = self.end_page.value()
+                
+                for page_num in range(start_page - 1, end_page):
                     page = self.current_doc[page_num]
                     pix = page.get_pixmap(matrix=fitz.Matrix(matrix_value, matrix_value))
                     
-                    # 이미지 저장
-                    save_path = os.path.join(save_dir, f"page_{page_num+1}.{format_type}")
-                    pix.save(save_path)
+                    # 이미지 파일명 생성
+                    image_path = os.path.join(
+                        save_dir,
+                        f"page_{page_num + 1}.{format_type}"
+                    )
                     
-                QMessageBox.information(self, "성공", f"{format_type.upper()} 변환이 완료되었습니다.")
-            except Exception as e:
-                QMessageBox.critical(self, "오류", f"변환 중 오류가 발생했습니다: {str(e)}")
+                    # 이미지 저장
+                    if format_type == "jpeg":
+                        pix.save(image_path, "jpeg", quality=quality)
+                    else:  # png
+                        pix.save(image_path, "png")
+                
+                QMessageBox.information(
+                    self,
+                    "성공",
+                    f"이미지 변환이 완료되었습니다.\n저장 위치: {save_dir}"
+                )
+        except Exception as e:
+            QMessageBox.critical(self, "오류", f"이미지 변환 중 오류가 발생했습니다: {str(e)}")
 
     def closeEvent(self, event):
         if self.current_doc:

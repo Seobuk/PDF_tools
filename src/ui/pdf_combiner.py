@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from ..utils.pdf_handler import PDFHandler
 from PyQt5.QtCore import QMimeData
+from .styles import PRIMARY_BUTTON_STYLE, TITLE_LABEL_STYLE
 import os
 
 class PDFMergerWidget(QWidget):
@@ -20,6 +21,7 @@ class PDFMergerWidget(QWidget):
         # 설명 라벨
         self.label_info = QLabel("1. PDF, 이미지(JPG/PNG)를 드래그하여 추가하세요.\n"
                                 "2. 순서를 마우스로 조정한 후 'PDF 생성'을 누르면 병합됩니다.")
+        self.label_info.setStyleSheet(TITLE_LABEL_STYLE)
         
         # 파일 리스트
         self.file_list = QListWidget()
@@ -29,6 +31,7 @@ class PDFMergerWidget(QWidget):
         # PDF 생성 버튼
         self.btn_generate = QPushButton("PDF 생성")
         self.btn_generate.clicked.connect(self.generate_pdf)
+        self.btn_generate.setStyleSheet(PRIMARY_BUTTON_STYLE)
         
         # 파일 리스트에 키 이벤트 연결
         self.file_list.keyPressEvent = self.handle_key_press

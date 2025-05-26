@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from .zoomable_scroll_area import ZoomableScrollArea
+from .styles import PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, TITLE_LABEL_STYLE
 import fitz
 import os
 
@@ -35,27 +36,24 @@ class PDFRotatorWidget(QWidget):
         layout = QVBoxLayout()
         
         # 설명 라벨
-        self.label_info = QLabel("PDF 파일을 선택하고 회전할 페이지를 지정하세요.\n"
-                                "Ctrl 키를 누른 상태에서 여러 페이지를 선택할 수 있습니다.")
-        self.label_info.setWordWrap(True)
+        self.label_info = QLabel("PDF 파일을 선택하고 회전할 페이지를 선택하세요.")
+        self.label_info.setStyleSheet(TITLE_LABEL_STYLE)
         
-        # 파일 선택 영역
-        file_layout = QHBoxLayout()
+        # 파일 선택 버튼
+        self.select_btn = QPushButton("PDF 파일 선택")
+        self.select_btn.clicked.connect(self.select_pdf)
+        self.select_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
+        
+        # 선택된 파일 경로 표시
         self.file_path_label = QLabel("선택된 파일: 없음")
-        self.file_path_label.setWordWrap(True)
-        self.select_file_btn = QPushButton("PDF 선택")
-        self.select_file_btn.clicked.connect(self.select_pdf)
-        file_layout.addWidget(self.file_path_label)
-        file_layout.addWidget(self.select_file_btn)
         
         # 페이지 선택
         page_layout = QGridLayout()
         self.page_spin = QSpinBox()
         self.page_spin.setMinimum(1)
-        self.page_spin.valueChanged.connect(self.update_preview)
         page_layout.addWidget(QLabel("페이지:"), 0, 0)
         page_layout.addWidget(self.page_spin, 0, 1)
-
+        
         # 미리보기 배율
         zoom_layout = QGridLayout()
         self.zoom_spin = QSpinBox()
@@ -63,25 +61,29 @@ class PDFRotatorWidget(QWidget):
         self.zoom_spin.setValue(30)
         self.zoom_spin.setSuffix('%')
         self.zoom_spin.valueChanged.connect(self.update_preview)
-        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
+        zoom_layout.addWidget(QLabel('미리보기 배율:'), 0, 0)
         zoom_layout.addWidget(self.zoom_spin, 0, 1)
         
-        # 회전 버튼들
+        # 회전 버튼
         rotate_layout = QHBoxLayout()
         self.rotate_left_btn = QPushButton("90° 왼쪽")
         self.rotate_right_btn = QPushButton("90° 오른쪽")
         self.rotate_left_btn.clicked.connect(lambda: self.rotate_page(-90))
         self.rotate_right_btn.clicked.connect(lambda: self.rotate_page(90))
+        self.rotate_left_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
+        self.rotate_right_btn.setStyleSheet(PRIMARY_BUTTON_STYLE)
         rotate_layout.addWidget(self.rotate_left_btn)
         rotate_layout.addWidget(self.rotate_right_btn)
         
         # 저장 버튼
         self.save_btn = QPushButton("변경사항 저장")
         self.save_btn.clicked.connect(self.save_changes)
+        self.save_btn.setStyleSheet(SUCCESS_BUTTON_STYLE)
         
         # 레이아웃에 위젯 추가
         layout.addWidget(self.label_info)
-        layout.addLayout(file_layout)
+        layout.addWidget(self.select_btn)
+        layout.addWidget(self.file_path_label)
         layout.addLayout(page_layout)
         layout.addLayout(zoom_layout)
         layout.addLayout(rotate_layout)
@@ -96,6 +98,7 @@ class PDFRotatorWidget(QWidget):
         # 미리보기 라벨
         preview_label = QLabel("미리보기")
         preview_label.setAlignment(Qt.AlignCenter)
+        preview_label.setStyleSheet(TITLE_LABEL_STYLE)
         
         # 미리보기 스크롤 영역
         self.scroll_area = ZoomableScrollArea(self.zoom_spin)
