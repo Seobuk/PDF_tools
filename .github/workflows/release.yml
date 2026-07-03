@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '릴리즈 태그 (예: v1.2.1)'
+        required: true
+      title:
+        description: '릴리즈 제목'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag }}
+          TITLE: ${{ github.event.inputs.title }}
+        run: |
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "${TITLE:-PDF Tools $TAG}" \
+            --notes-file <(awk "/^## ${TAG//./\\.} /{flag=1; next} /^## /{flag=0} flag" RELEASE_NOTES.md)
+
+  build-exe:
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build executable
+        run: pyinstaller --noconsole --onefile --name PDF_Tools main.py
+      - name: Upload executable to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag }}
+        run: gh release upload "$env:TAG" dist/PDF_Tools.exe --clobber
