@@ -1,14 +1,14 @@
 name: Release
 
 on:
+  push:
+    branches: [main]
+    paths: ['.release-trigger']
   workflow_dispatch:
     inputs:
       tag:
         description: '릴리즈 태그 (예: v1.2.1)'
         required: true
-      title:
-        description: '릴리즈 제목'
-        required: false
 
 permissions:
   contents: write
@@ -16,22 +16,36 @@ permissions:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+      - name: Resolve tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG=$(tr -d '[:space:]' < .release-trigger)
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag }}
-          TITLE: ${{ github.event.inputs.title }}
+          TAG: ${{ steps.tag.outputs.tag }}
         run: |
+          awk -v tag="$TAG" 'index($0, "## " tag " ") == 1 {flag=1; next} /^## /{flag=0} flag' RELEASE_NOTES.md > notes.md
+          if [ ! -s notes.md ]; then echo "PDF Tools $TAG" > notes.md; fi
           gh release create "$TAG" \
             --target "$GITHUB_SHA" \
-            --title "${TITLE:-PDF Tools $TAG}" \
-            --notes-file <(awk "/^## ${TAG//./\\.} /{flag=1; next} /^## /{flag=0} flag" RELEASE_NOTES.md)
+            --title "PDF Tools $TAG" \
+            --notes-file notes.md
 
   build-exe:
     needs: create-release
     runs-on: windows-latest
+    env:
+      TAG: ${{ needs.create-release.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,5 +58,4 @@ jobs:
       - name: Upload executable to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG: ${{ github.event.inputs.tag }}
         run: gh release upload "$env:TAG" dist/PDF_Tools.exe --clobber
