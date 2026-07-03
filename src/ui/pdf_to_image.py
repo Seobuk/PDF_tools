@@ -219,7 +219,7 @@ class PDFToImageWidget(QWidget):
                     
                     # 이미지 저장
                     if format_type == "jpeg":
-                        pix.save(image_path, "jpeg", quality=quality)
+                        pix.save(image_path, "jpeg", jpg_quality=quality)
                     else:  # png
                         pix.save(image_path, "png")
                 
