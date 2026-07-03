@@ -6,7 +6,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 from .zoomable_scroll_area import ZoomableScrollArea
-from .styles import PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, TITLE_LABEL_STYLE
+from .styles import (
+    PRIMARY_BUTTON_STYLE, SUCCESS_BUTTON_STYLE, TITLE_LABEL_STYLE,
+    PAGE_CARD_STYLE, PAGE_CARD_SELECTED_STYLE, PAGE_INFO_SELECTED_STYLE,
+)
 import fitz
 import os
 
@@ -159,14 +162,9 @@ class PDFRotatorWidget(QWidget):
             
             # 선택 상태에 따른 테두리 스타일 설정
             if page_num in self.selected_pages:
-                page_container.setStyleSheet("""
-                    QWidget {
-                        border: 2px solid #007aff;
-                        border-radius: 5px;
-                        padding: 5px;
-                        background-color: #f2f2f7;
-                    }
-                """)
+                page_container.setStyleSheet(PAGE_CARD_SELECTED_STYLE)
+            else:
+                page_container.setStyleSheet(PAGE_CARD_STYLE)
             
             # 페이지 번호와 회전 정보 표시
             info_label = QLabel(f"페이지 {page_num + 1} (회전: {page.rotation}°)")
@@ -187,7 +185,7 @@ class PDFRotatorWidget(QWidget):
             
             # 선택 상태 표시
             if page_num in self.selected_pages:
-                info_label.setStyleSheet("background-color: #e5f0ff; color: #007aff;")
+                info_label.setStyleSheet(PAGE_INFO_SELECTED_STYLE)
             
             # 클릭 이벤트 처리
             label.mousePressEvent = lambda e, p=page_num: self.toggle_page_selection(p)
