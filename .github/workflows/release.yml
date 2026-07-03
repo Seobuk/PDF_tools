@@ -55,6 +55,24 @@ jobs:
         run: pip install -r requirements.txt
       - name: Build executable
         run: pyinstaller --noconsole --onefile --name PDF_Tools main.py
+      - name: Sign executable
+        env:
+          CERT_B64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          if (-not $env:CERT_B64) {
+            Write-Host "WINDOWS_CERT_PFX_BASE64 시크릿이 설정되지 않아 코드 서명을 건너뜁니다."
+            exit 0
+          }
+          $certPath = Join-Path $env:RUNNER_TEMP "cert.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:CERT_B64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -like "*x64*" } |
+            Select-Object -Last 1 -ExpandProperty FullName
+          & $signtool sign /f $certPath /p $env:CERT_PASSWORD /t http://timestamp.digicert.com /fd SHA256 dist/PDF_Tools.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $signtool verify /pa dist/PDF_Tools.exe
+          Remove-Item $certPath
       - name: Upload executable to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
