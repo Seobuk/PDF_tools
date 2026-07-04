@@ -10,7 +10,7 @@ from .pdf_formatter_tab import PdfFormatterTab
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("PDF 도구모음 (만든사람 SHU, VER 1.3.1)")
+        self.setWindowTitle("PDF 도구모음 (만든사람 SHU, VER 1.4.0)")
         self.setup_ui()
 
     def setup_ui(self):
