@@ -1,12 +1,13 @@
 # PDF Composer
 
-v1.3.1
+v1.4.0
 
 PDF 문서를 편집하고 변환할 수 있는 PyQt5 기반의 데스크톱 애플리케이션입니다.
 군더더기 없는 Qt 기본(Fusion) 디자인으로 어떤 환경에서도 깨짐 없이 동작합니다.
 
 ## 주요 기능
 
+- PDF 병합: PDF와 이미지(JPG/PNG/BMP/TIFF/WEBP/GIF)를 원하는 순서로 한 PDF로 병합
 - PDF 회전: PDF 페이지를 90도 단위로 회전
 - PDF 분할: PDF 문서를 페이지 단위로 분할
 - PDF to JPEG: PDF 페이지를 JPEG 이미지로 변환

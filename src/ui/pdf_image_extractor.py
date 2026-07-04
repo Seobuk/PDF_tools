@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton,
-    QFileDialog, QMessageBox, QSpinBox, QGridLayout,
-    QListWidget, QListWidgetItem, QCheckBox
+    QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QCheckBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
-from .zoomable_scroll_area import ZoomableScrollArea
+from .preview import clear_layout, create_zoom_control, create_preview_panel
+from ..utils.pdf_handler import default_output_path
 import fitz
 import os
 from PIL import Image
@@ -21,13 +21,10 @@ class PDFImageExtractorWidget(QWidget):
 
     def setup_ui(self):
         main_layout = QHBoxLayout()
-        
-        # 왼쪽 패널 설정
+
         left_panel = self.setup_left_panel()
-        
-        # 오른쪽 패널 설정
-        right_panel = self.setup_right_panel()
-        
+        right_panel, self.preview_layout = create_preview_panel(self.zoom_spin, title="이미지 미리보기")
+
         main_layout.addLayout(left_panel, stretch=1)
         main_layout.addLayout(right_panel, stretch=2)
         self.setLayout(main_layout)
@@ -62,14 +59,9 @@ class PDFImageExtractorWidget(QWidget):
         self.image_list.currentItemChanged.connect(self.show_image)
 
         # 미리보기 배율
-        zoom_layout = QGridLayout()
-        self.zoom_spin = QSpinBox()
-        self.zoom_spin.setRange(10, 300)
-        self.zoom_spin.setValue(100)
-        self.zoom_spin.setSuffix('%')
-        self.zoom_spin.valueChanged.connect(lambda: self.show_image(self.image_list.currentItem()))
-        zoom_layout.addWidget(QLabel("미리보기 배율:"), 0, 0)
-        zoom_layout.addWidget(self.zoom_spin, 0, 1)
+        zoom_layout, self.zoom_spin = create_zoom_control(
+            lambda: self.show_image(self.image_list.currentItem()), initial=100
+        )
 
         # 저장 버튼
         self.save_btn = QPushButton("선택한 이미지 저장")
@@ -84,28 +76,6 @@ class PDFImageExtractorWidget(QWidget):
         layout.addLayout(zoom_layout)
         layout.addWidget(self.save_btn)
         layout.addStretch()
-        
-        return layout
-
-    def setup_right_panel(self):
-        layout = QVBoxLayout()
-        
-        # 미리보기 라벨
-        preview_label = QLabel("이미지 미리보기")
-        preview_label.setAlignment(Qt.AlignCenter)
-        
-        # 미리보기 스크롤 영역
-        self.scroll_area = ZoomableScrollArea(self.zoom_spin)
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setMinimumWidth(400)
-        
-        # 미리보기 컨테이너
-        self.preview_container = QWidget()
-        self.preview_layout = QVBoxLayout(self.preview_container)
-        self.scroll_area.setWidget(self.preview_container)
-        
-        layout.addWidget(preview_label)
-        layout.addWidget(self.scroll_area)
         
         return layout
 
@@ -174,11 +144,8 @@ class PDFImageExtractorWidget(QWidget):
             return
             
         # 기존 미리보기 제거
-        for i in reversed(range(self.preview_layout.count())):
-            widget = self.preview_layout.itemAt(i).widget()
-            if widget:
-                widget.setParent(None)
-        
+        clear_layout(self.preview_layout)
+
         # 선택된 이미지 표시
         img_index = current.data(Qt.UserRole)
         img_info = self.images[img_index]
@@ -216,19 +183,10 @@ class PDFImageExtractorWidget(QWidget):
             QMessageBox.warning(self, "경고", "저장할 이미지를 선택해주세요.")
             return
             
-        # 원본 파일의 경로와 파일명 분리
-        original_dir = os.path.dirname(self.current_pdf_path)
-        original_filename = os.path.basename(self.current_pdf_path)
-        
-        # 새 폴더명 생성 (원본파일명_images)
-        default_dir_name = os.path.splitext(original_filename)[0] + '_images'
-        # 전체 경로 생성 (원본경로/원본파일명_images)
-        default_save_dir = os.path.join(original_dir, default_dir_name)
-        
         save_dir = QFileDialog.getExistingDirectory(
-            self, 
+            self,
             "저장 폴더 선택",
-            default_save_dir  # 원본 파일 경로를 기본 저장 경로로 설정
+            default_output_path(self.current_pdf_path, '_images')
         )
         
         if save_dir:
