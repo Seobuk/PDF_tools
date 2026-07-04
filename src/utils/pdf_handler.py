@@ -1,4 +1,3 @@
-import fitz
 from PIL import Image, ImageOps
 import os
 from PyPDF2 import PdfMerger
@@ -7,20 +6,14 @@ import tempfile
 # 병합 시 PDF로 변환해 붙일 수 있는 이미지 확장자
 IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff', '.webp', '.gif'}
 
-class PDFHandler:
-    @staticmethod
-    def split_pdf(input_path, output_path, start_page, end_page):
-        try:
-            doc = fitz.open(input_path)
-            new_doc = fitz.open()
-            new_doc.insert_pdf(doc, from_page=start_page-1, to_page=end_page-1)
-            new_doc.save(output_path)
-            new_doc.close()
-            doc.close()
-            return True
-        except Exception as e:
-            raise Exception(f"PDF 쪼개기 실패: {str(e)}")
 
+def default_output_path(input_path, suffix):
+    """원본 파일 옆에 '원본이름 + suffix' 형태의 기본 저장 경로를 만든다."""
+    base, _ = os.path.splitext(input_path)
+    return base + suffix
+
+
+class PDFHandler:
     def combine_pdfs(self, file_paths, output_path):
         merger = PdfMerger()
         temp_files = []  # 임시 파일 목록 관리
