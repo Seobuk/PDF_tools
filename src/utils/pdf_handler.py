@@ -1,11 +1,11 @@
 import fitz
-from PIL import Image
+from PIL import Image, ImageOps
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, 
-                           QPushButton, QLabel, QFileDialog)
 from PyPDF2 import PdfMerger
 import tempfile
+
+# 병합 시 PDF로 변환해 붙일 수 있는 이미지 확장자
+IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff', '.webp', '.gif'}
 
 class PDFHandler:
     @staticmethod
@@ -31,7 +31,7 @@ class PDFHandler:
                 
                 if ext == '.pdf':
                     merger.append(file_path)
-                elif ext in ['.jpg', '.jpeg', '.png']:
+                elif ext in IMAGE_EXTENSIONS:
                     # 이미지를 PDF로 변환
                     temp_pdf = self.image_to_pdf(file_path)
                     temp_files.append(temp_pdf)  # 임시 파일 목록에 추가
@@ -78,7 +78,9 @@ class PDFHandler:
 
         try:
             with Image.open(image_path) as image:
-                if image.mode == 'RGBA':
+                # 휴대폰 사진 등의 EXIF 회전 정보를 실제 픽셀에 반영
+                image = ImageOps.exif_transpose(image)
+                if image.mode != 'RGB':
                     image = image.convert('RGB')
                 image.save(output_path, "PDF", resolution=100.0)
         except Exception as e:

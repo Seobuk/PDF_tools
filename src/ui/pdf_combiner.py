@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem,
+    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QListWidget, QListWidgetItem,
     QPushButton, QFileDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt
-from ..utils.pdf_handler import PDFHandler
+from ..utils.pdf_handler import PDFHandler, IMAGE_EXTENSIONS
 from PyQt5.QtCore import QMimeData
 from .styles import PRIMARY_BUTTON_STYLE, TITLE_LABEL_STYLE
 import os
+
+SUPPORTED_EXTENSIONS = {'.pdf'} | IMAGE_EXTENSIONS
 
 class PDFMergerWidget(QWidget):
     def __init__(self):
@@ -19,28 +21,46 @@ class PDFMergerWidget(QWidget):
         layout = QVBoxLayout()
         
         # 설명 라벨
-        self.label_info = QLabel("1. PDF, 이미지(JPG/PNG)를 드래그하여 추가하세요.\n"
-                                "2. 순서를 마우스로 조정한 후 'PDF 생성'을 누르면 병합됩니다.")
+        self.label_info = QLabel("1. PDF, 이미지(JPG/PNG/BMP/TIFF/WEBP/GIF)를 드래그하거나 '파일 추가'로 추가하세요.\n"
+                                "2. 순서를 마우스로 조정한 후 'PDF 생성'을 누르면 병합됩니다. (Delete 키로 항목 삭제)")
         self.label_info.setStyleSheet(TITLE_LABEL_STYLE)
-        
+
         # 파일 리스트
         self.file_list = QListWidget()
         self.file_list.setSelectionMode(self.file_list.SingleSelection)
         self.file_list.setDragDropMode(self.file_list.InternalMove)
-        
+
+        # 파일 추가 버튼
+        self.btn_add = QPushButton("파일 추가")
+        self.btn_add.clicked.connect(self.select_files)
+
         # PDF 생성 버튼
         self.btn_generate = QPushButton("PDF 생성")
         self.btn_generate.clicked.connect(self.generate_pdf)
         self.btn_generate.setStyleSheet(PRIMARY_BUTTON_STYLE)
-        
+
         # 파일 리스트에 키 이벤트 연결
         self.file_list.keyPressEvent = self.handle_key_press
-        
+
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.btn_add)
+        button_layout.addWidget(self.btn_generate)
+
         layout.addWidget(self.label_info)
         layout.addWidget(self.file_list)
-        layout.addWidget(self.btn_generate)
-        
+        layout.addLayout(button_layout)
+
         self.setLayout(layout)
+
+    def select_files(self):
+        image_patterns = " ".join(f"*{ext}" for ext in sorted(IMAGE_EXTENSIONS))
+        file_paths, _ = QFileDialog.getOpenFileNames(
+            self,
+            "병합할 파일 선택",
+            "",
+            f"PDF/이미지 파일 (*.pdf {image_patterns});;PDF files (*.pdf);;이미지 파일 ({image_patterns})"
+        )
+        self.add_files(file_paths)
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -50,16 +70,19 @@ class PDFMergerWidget(QWidget):
 
     def dropEvent(self, event):
         files = [url.toLocalFile() for url in event.mimeData().urls()]
-        for file_path in files:
+        self.add_files(files)
+
+    def add_files(self, file_paths):
+        for file_path in file_paths:
             ext = os.path.splitext(file_path)[1].lower()
-            if ext in ['.pdf', '.jpg', '.jpeg', '.png']:
+            if ext in SUPPORTED_EXTENSIONS:
                 item = QListWidgetItem(os.path.basename(file_path))
                 item.setData(Qt.UserRole, file_path)
                 self.file_list.addItem(item)
             else:
                 QMessageBox.warning(
-                    self, 
-                    "경고", 
+                    self,
+                    "경고",
                     f"지원하지 않는 파일 형식입니다: {os.path.basename(file_path)}"
                 )
 
