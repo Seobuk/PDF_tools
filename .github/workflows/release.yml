@@ -77,3 +77,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "$env:TAG" dist/PDF_Tools.exe --clobber
+
+  build-linux:
+    needs: create-release
+    runs-on: ubuntu-22.04  # 구형 glibc 호환 위해 latest 대신 22.04
+    env:
+      TAG: ${{ needs.create-release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Build binary
+        run: pyinstaller --noconsole --onefile --name PDF_Tools-linux main.py
+      - name: Upload binary to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$TAG" dist/PDF_Tools-linux --clobber
