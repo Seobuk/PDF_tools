@@ -1,5 +1,12 @@
 # PDF Composer 릴리즈 노트
 
+## v1.5.1 (2026-07-23)
+
+### 버그 수정
+- Windows 실행 파일이 `Could not load PyInstaller's embedded PKG archive from the executable` 오류로 실행되지 않던 문제를 수정했습니다.
+  - 단일 `PDF_Tools.exe`(`--onefile`) 대신 폴더형(`--onedir`) 빌드를 `PDF_Tools-windows.zip`으로 배포합니다. 실행 데이터가 exe 끝에 파묻히지 않아 백신 오탐·다운로드 손상으로 인한 실행 실패가 사라지고, 시작 속도도 빨라집니다.
+  - 사용법: zip 압축을 풀고 `PDF_Tools` 폴더 안의 `PDF_Tools.exe`를 실행하세요. exe는 같은 폴더의 `_internal`과 함께 두어야 합니다.
+
 ## v1.5.0 (2026-07-23)
 
 ### 새로운 기능

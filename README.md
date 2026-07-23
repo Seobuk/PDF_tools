@@ -9,7 +9,7 @@
 [![PyQt5](https://img.shields.io/badge/GUI-PyQt5-41CD52?logo=qt&logoColor=white)](https://pypi.org/project/PyQt5/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Want to use it without installing? → **[Download the latest PDF_Tools.exe](https://github.com/Seobuk/PDF_tools/releases/latest)**
+Want to use it without installing? → **[Download the latest release](https://github.com/Seobuk/PDF_tools/releases/latest)**
 
 🌐 **English** · [한국어](README.ko.md)
 
@@ -36,7 +36,9 @@ Every preview supports zoom in/out with **Ctrl + Mouse Wheel**.
 
 ### Option 1 — Executable (Windows)
 
-Download `PDF_Tools.exe` from the [releases page](https://github.com/Seobuk/PDF_tools/releases/latest) and run it directly. No installation required.
+Download `PDF_Tools-windows.zip` from the [releases page](https://github.com/Seobuk/PDF_tools/releases/latest), extract it, then run `PDF_Tools.exe` inside the extracted `PDF_Tools` folder. No installation required.
+
+> Keep `PDF_Tools.exe` next to its `_internal` folder — the app won't start if you move the exe out on its own.
 
 ### Option 2 — Run from source
 
@@ -50,7 +52,7 @@ python main.py
 ### Build the exe yourself (optional)
 
 ```bash
-pyinstaller --noconsole --onefile --name PDF_Tools main.py
+pyinstaller --noconsole --onedir --name PDF_Tools main.py
 ```
 
 ---

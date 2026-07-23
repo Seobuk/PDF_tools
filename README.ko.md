@@ -9,7 +9,7 @@
 [![PyQt5](https://img.shields.io/badge/GUI-PyQt5-41CD52?logo=qt&logoColor=white)](https://pypi.org/project/PyQt5/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-설치 없이 쓰고 싶다면 → **[최신 버전 PDF_Tools.exe 다운로드](https://github.com/Seobuk/PDF_tools/releases/latest)**
+설치 없이 쓰고 싶다면 → **[최신 릴리즈 다운로드](https://github.com/Seobuk/PDF_tools/releases/latest)**
 
 [English](README.md) · 🌐 **한국어**
 
@@ -36,7 +36,9 @@
 
 ### 방법 1 — 실행 파일 (Windows)
 
-[릴리즈 페이지](https://github.com/Seobuk/PDF_tools/releases/latest)에서 `PDF_Tools.exe`를 내려받아 바로 실행하세요. 별도 설치가 필요 없습니다.
+[릴리즈 페이지](https://github.com/Seobuk/PDF_tools/releases/latest)에서 `PDF_Tools-windows.zip`을 내려받아 압축을 풀고, 생성된 `PDF_Tools` 폴더 안의 `PDF_Tools.exe`를 실행하세요. 별도 설치가 필요 없습니다.
+
+> `PDF_Tools.exe`는 같은 폴더의 `_internal` 폴더와 함께 두어야 합니다. exe만 따로 옮기면 실행되지 않습니다.
 
 ### 방법 2 — 소스에서 실행
 
@@ -50,7 +52,7 @@ python main.py
 ### 직접 exe 빌드하기 (선택)
 
 ```bash
-pyinstaller --noconsole --onefile --name PDF_Tools main.py
+pyinstaller --noconsole --onedir --name PDF_Tools main.py
 ```
 
 ---

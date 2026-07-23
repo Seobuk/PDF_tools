@@ -54,7 +54,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Build executable
-        run: pyinstaller --noconsole --onefile --name PDF_Tools main.py
+        # --onedir(폴더형)로 빌드: 실행에 필요한 데이터가 exe 끝에 embedded PKG로 붙지 않고
+        # _internal 폴더에 분리된다. --onefile에서 백신 오탐/다운로드 손상으로 exe 끝의
+        # PKG 아카이브가 훼손되면 "Could not load PyInstaller's embedded PKG archive" 오류가
+        # 발생하는데, onedir는 이 문제 부류를 원천적으로 없애고 백신 오탐도 크게 줄인다.
+        run: pyinstaller --noconsole --onedir --name PDF_Tools main.py
       - name: Sign executable
         env:
           CERT_B64: ${{ secrets.WINDOWS_CERT_PFX_BASE64 }}
@@ -69,14 +73,18 @@ jobs:
           $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
             Where-Object { $_.FullName -like "*x64*" } |
             Select-Object -Last 1 -ExpandProperty FullName
-          & $signtool sign /f $certPath /p $env:CERT_PASSWORD /t http://timestamp.digicert.com /fd SHA256 dist/PDF_Tools.exe
+          & $signtool sign /f $certPath /p $env:CERT_PASSWORD /t http://timestamp.digicert.com /fd SHA256 dist/PDF_Tools/PDF_Tools.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          & $signtool verify /pa dist/PDF_Tools.exe
+          & $signtool verify /pa dist/PDF_Tools/PDF_Tools.exe
           Remove-Item $certPath
+      - name: Package executable
+        # 폴더 전체(exe + _internal)를 하나의 zip으로 묶는다. 압축 해제하면 PDF_Tools 폴더가
+        # 생기고 그 안의 PDF_Tools.exe를 실행하면 된다.
+        run: Compress-Archive -Path dist/PDF_Tools -DestinationPath dist/PDF_Tools-windows.zip
       - name: Upload executable to release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$env:TAG" dist/PDF_Tools.exe --clobber
+        run: gh release upload "$env:TAG" dist/PDF_Tools-windows.zip --clobber
 
   build-linux:
     needs: create-release
